@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simple Private Chat</title>
+<title>Private Room Chat</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
 
@@ -54,10 +54,11 @@ body{
 }
 
 .message{
-    max-width:70%;
+    max-width:75%;
     padding:10px 15px;
     border-radius:15px;
     font-size:14px;
+    animation:fadeIn 0.2s ease-in-out;
 }
 
 .sent{
@@ -70,28 +71,47 @@ body{
     background:white;
 }
 
+.timestamp{
+    font-size:10px;
+    opacity:0.6;
+    margin-top:4px;
+    text-align:right;
+}
+
 .input-area{
     display:flex;
     padding:10px;
     background:white;
+    gap:5px;
 }
 
 input{
-    flex:1;
     padding:10px;
     border-radius:20px;
     border:1px solid #ccc;
     outline:none;
 }
 
+#username{
+    width:110px;
+}
+
+#messageInput{
+    flex:1;
+}
+
 button{
-    margin-left:10px;
     padding:10px 15px;
     border:none;
     border-radius:20px;
     background:#25D366;
     color:white;
     cursor:pointer;
+}
+
+@keyframes fadeIn{
+    from{opacity:0;transform:translateY(5px);}
+    to{opacity:1;transform:translateY(0);}
 }
 </style>
 </head>
@@ -105,8 +125,8 @@ button{
     <div class="messages" id="messages"></div>
 
     <div class="input-area">
-        <input type="text" id="username" placeholder="Your name" style="max-width:120px;">
-        <input type="text" id="messageInput" placeholder="Type a message...">
+        <input type="text" id="username" placeholder="Your name">
+        <input type="text" id="messageInput" placeholder="Type message...">
         <button onclick="sendMessage()">Send</button>
     </div>
 </div>
@@ -131,51 +151,89 @@ const database = firebase.database();
 
 // Ambil room dari URL
 const urlParams = new URLSearchParams(window.location.search);
-const room = urlParams.get('room');
+let room = urlParams.get('room');
 
 if(!room){
-    alert("Room tidak ditemukan di URL! Tambahkan ?room=namaroom");
+    room = prompt("Masukkan nama room:");
+    if(!room){
+        alert("Room wajib diisi!");
+        throw new Error("Room tidak ada");
+    }
 }
 
 const messagesRef = database.ref("rooms/" + room);
 
-function sendMessage(){
-    const username = document.getElementById("username").value || "Anonymous";
-    const text = document.getElementById("messageInput").value;
+// Simpan username agar tidak berubah
+let username = localStorage.getItem("chatUsername");
+const usernameInput = document.getElementById("username");
 
-    if(text.trim() === "") return;
+if(username){
+    usernameInput.value = username;
+}
+
+usernameInput.addEventListener("change", () => {
+    localStorage.setItem("chatUsername", usernameInput.value);
+    username = usernameInput.value;
+});
+
+function sendMessage(){
+    const textInput = document.getElementById("messageInput");
+    const text = textInput.value.trim();
+
+    if(!usernameInput.value){
+        alert("Isi nama dulu!");
+        return;
+    }
+
+    if(text === "") return;
 
     messagesRef.push({
-        username: username,
+        username: usernameInput.value,
         text: text,
         timestamp: Date.now()
     });
 
-    document.getElementById("messageInput").value = "";
+    textInput.value = "";
 }
 
-messagesRef.on("child_added", snapshot => {
+document.getElementById("messageInput")
+.addEventListener("keypress", function(e){
+    if(e.key === "Enter"){
+        sendMessage();
+    }
+});
+
+messagesRef.limitToLast(100).on("child_added", snapshot => {
     const data = snapshot.val();
     displayMessage(data);
 });
+
+function formatTime(ts){
+    const date = new Date(ts);
+    return date.getHours().toString().padStart(2,'0') + ":" +
+           date.getMinutes().toString().padStart(2,'0');
+}
 
 function displayMessage(data){
     const msgDiv = document.createElement("div");
     msgDiv.classList.add("message");
 
-    const currentUser = document.getElementById("username").value;
-
-    if(data.username === currentUser){
+    if(data.username === usernameInput.value){
         msgDiv.classList.add("sent");
     } else {
         msgDiv.classList.add("received");
     }
 
-    msgDiv.innerHTML = `<strong>${data.username}</strong><br>${data.text}`;
-    document.getElementById("messages").appendChild(msgDiv);
+    msgDiv.innerHTML = `
+        <strong>${data.username}</strong><br>
+        ${data.text}
+        <div class="timestamp">${formatTime(data.timestamp)}</div>
+    `;
 
-    document.getElementById("messages").scrollTop = 
-        document.getElementById("messages").scrollHeight;
+    const messagesContainer = document.getElementById("messages");
+    messagesContainer.appendChild(msgDiv);
+
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 </script>
 
