@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadline Master | Glassmorphism Planner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkRlYWRsaW5lIE1hc3RlciIsCiAgInNob3J0X25hbWUiOiAiRGVhZGxpbmUiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzZmNDJlYyIsCiAgInRoZW1lX2NvbG9yIjogIiM2ZjQyZWMiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZnJlZXBpay5jb20vNTEyLzg0NDQvODQ0NDgyNC5wbmciLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+
+    <style>
+        :root {
+            --primary: #6e8efb;
+            --secondary: #a777e3;
+            --bg-gradient: linear-gradient(135deg, #6e8efb 0%, #a777e3 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.15);
+            --danger: #ff4d4d;
+        }
+
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-color: #2d3436;
+            --card-bg: rgba(255, 255, 255, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-color);
+            transition: all 0.5s ease;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            margin-bottom: 25px;
+        }
+
+        /* Header & Stats */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Inputs */
+        .input-group {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input, select, button {
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: var(--card-bg);
+            color: var(--text-color);
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 600;
+            background: var(--primary);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+            transform: scale(1.05);
+        }
+
+        .btn-icon { padding: 12px; }
+
+        /* Project Cards */
+        .project-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .project-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.4s ease-out;
+            transition: 0.3s;
+        }
+
+        .project-card.near-deadline {
+            border: 2px solid var(--danger);
+            background: rgba(255, 77, 77, 0.1);
+        }
+
+        .countdown-timer {
+            font-family: monospace;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 1s linear;
+        }
+
+        /* Modal Popup */
+        #alert-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            z-index: 1000;
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 30px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            transition: 0.3s;
+        }
+
+        #alert-modal.active {
+            display: block;
+            animation: popUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes popUp { to { transform: translate(-50%, -50%) scale(1); } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .input-group { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <div class="container">
+        <div class="header">
+            <h1><i data-lucide="calendar-clock"></i> DeadlineMaster</h1>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-icon" onclick="toggleTheme()" title="Toggle Theme"><i data-lucide="sun"></i></button>
+                <button class="btn-icon" onclick="exportData()" title="Export JSON"><i data-lucide="download"></i></button>
+                <label class="btn-icon" style="cursor: pointer; background: var(--secondary);">
+                    <i data-lucide="upload"></i>
+                    <input type="file" id="importFile" hidden onchange="importData(event)">
+                </label>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p>Total Projects</p>
+                <h2 id="stat-total">0</h2>
+            </div>
+            <div class="stat-card">
+                <p>Urgent (<1hr)</p>
+                <h2 id="stat-urgent" style="color: var(--danger)">0</h2>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="input-group">
+                <input type="text" id="proj-name" placeholder="Project Name">
+                <input type="date" id="proj-date">
+                <input type="time" id="proj-time">
+                <button onclick="addProject()"><i data-lucide="plus"></i> Add</button>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <small>Filter:</small>
+                <select id="filter-select" onchange="renderProjects()">
+                    <option value="all">All</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="project-list" class="project-list">
+            </div>
+    </div>
+
+    <div id="alert-modal">
+        <h2 style="margin-bottom: 10px;">⏰ Time's Up!</h2>
+        <p id="alert-project-name" style="font-size: 1.2rem; margin-bottom: 20px;">Project Name</p>
+        <button onclick="closeModal()" style="width: 100%;">Got it!</button>
+    </div>
+
+    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <script>
+        // --- State Management ---
+        let projects = JSON.parse(localStorage.getItem('projects')) || [];
+        const sound = document.getElementById('notif-sound');
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // --- Core Functions ---
+        function addProject() {
+            const name = document.getElementById('proj-name').value;
+            const date = document.getElementById('proj-date').value;
+            const time = document.getElementById('proj-time').value;
+
+            if(!name || !date || !time) return alert("Please fill all fields!");
+
+            const deadline = new Date(`${date}T${time}`);
+            const newProject = {
+                id: Date.now(),
+                name,
+                deadline: deadline.getTime(),
+                completed: false,
+                notified: false
+            };
+
+            projects.push(newProject);
+            saveAndRender();
+            
+            // Clear inputs
+            document.getElementById('proj-name').value = '';
+        }
+
+        function deleteProject(id) {
+            projects = projects.filter(p => p.id !== id);
+            saveAndRender();
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('projects', JSON.stringify(projects));
+            renderProjects();
+        }
+
+        function renderProjects() {
+            const list = document.getElementById('project-list');
+            const filter = document.getElementById('filter-select').value;
+            list.innerHTML = '';
+
+            let urgentCount = 0;
+
+            projects.forEach(proj => {
+                const now = new Date().getTime();
+                const diff = proj.deadline - now;
+                const isCompleted = diff <= 0;
+
+                // Filtering logic
+                if(filter === 'upcoming' && isCompleted) return;
+                if(filter === 'completed' && !isCompleted) return;
+
+                // Statistics
+                if(!isCompleted && diff < 3600000) urgentCount++;
+
+                const card = document.createElement('div');
+                card.className = `project-card ${(!isCompleted && diff < 3600000) ? 'near-deadline' : ''}`;
+                
+                const timeStr = new Date(proj.deadline).toLocaleString('en-GB', {
+                    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false
+                });
+
+                card.innerHTML = `
+                    <div style="flex: 1;">
+                        <h3 style="margin-bottom: 5px;">${proj.name}</h3>
+                        <small><i data-lucide="calendar"></i> ${timeStr}</small>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="pb-${proj.id}"></div>
+                        </div>
+                        <div class="countdown-timer" id="timer-${proj.id}">
+                            ${isCompleted ? 'DEADLINE REACHED' : 'Calculating...'}
+                        </div>
+                    </div>
+                    <button class="btn-icon" style="background: var(--danger); margin-left: 15px;" onclick="deleteProject(${proj.id})">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                `;
+                list.appendChild(card);
+            });
+
+            document.getElementById('stat-total').innerText = projects.length;
+            document.getElementById('stat-urgent').innerText = urgentCount;
+            lucide.createIcons();
+        }
+
+        // --- Real-time Engine ---
+        setInterval(() => {
+            const now = new Date().getTime();
+            
+            projects.forEach(proj => {
+                const diff = proj.deadline - now;
+                const timerEl = document.getElementById(`timer-${proj.id}`);
+                const barEl = document.getElementById(`pb-${proj.id}`);
+
+                if (diff > 0) {
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                    
+                    if(timerEl) timerEl.innerText = `${days}d ${hours}h ${mins}m ${secs}s`;
+                    
+                    // Simple progress bar logic (last 24 hours)
+                    if(barEl) {
+                        const percent = Math.max(0, Math.min(100, (diff / 86400000) * 100));
+                        barEl.style.width = (100 - percent) + "%";
+                    }
+                } else if (!proj.notified) {
+                    triggerAlarm(proj);
+                    proj.notified = true;
+                    saveAndRender();
+                }
+            });
+        }, 1000);
+
+        function triggerAlarm(proj) {
+            sound.play();
+            document.getElementById('alert-project-name').innerText = proj.name;
+            document.getElementById('alert-modal').classList.add('active');
+
+            if (Notification.permission === "granted") {
+                new Notification("Deadline Reached!", {
+                    body: `Time is up for: ${proj.name}`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/8444/8444824.png"
+                });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('alert-modal').classList.remove('active');
+            sound.pause();
+            sound.currentTime = 0;
+        }
+
+        // --- Extras ---
+        function toggleTheme() {
+            const body = document.body;
+            const current = body.getAttribute('data-theme');
+            body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        }
+
+        function exportData() {
+            const blob = new Blob([JSON.stringify(projects)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'projects_backup.json';
+            a.click();
+        }
+
+        function importData(event) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                projects = JSON.parse(e.target.result);
+                saveAndRender();
+            };
+            reader.readAsText(event.target.files[0]);
+        }
+
+        // --- Service Worker & PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+                `;
+                const blob = new Blob([swCode], {type: 'text/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob));
+            });
+        }
+
+        // Request Permissions
+        if (Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+
+        renderProjects();
+    </script>
+</body>
+</html>
